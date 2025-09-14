@@ -45,4 +45,29 @@ final class ProductController extends AbstractController
 
         return $this->json($product, 201);
     }
+
+    #[Route('/api/products/{id}', methods: ['PUT'])]
+    public function update(int $id, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Product not found'], 404);
+        }
+        $data = $request->getContent();
+        $serializer->deserialize($data, Product::class, 'json', ['object_to_populate' => $product]);
+        $em->flush();   
+        return $this->json($product);
+    }
+
+    #[Route('/api/products/{id}', methods: ['DELETE'])]
+    public function delete(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Product not found'], 404);
+        }
+        $em->remove($product);
+        $em->flush();
+        return $this->json(null, 204);
+    }
 }
