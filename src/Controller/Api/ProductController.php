@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -32,6 +33,16 @@ final class ProductController extends AbstractController
         $json_content = $serializer->serialize($product, 'json');
  
         return JsonResponse::fromJsonString($json_content);
+    }
 
+    #[Route('/api/products', methods: ['POST'])]
+    public function create(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $data = $request->getContent();
+        $product = $serializer->deserialize($data, Product::class, 'json');
+        $em->persist($product);
+        $em->flush();
+
+        return $this->json($product, 201);
     }
 }
